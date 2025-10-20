@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - RABBIT_URL=amqp://guest:guest@rabbitmq/
+      - DATABASE_URL=sqlite+aiosqlite:///./data/db.sqlite3
+      - UPLOAD_DIR=/app/data/uploads
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./data:/app/data
+  worker:
+    build: .
+    command: ["python", "worker.py"]
+    environment:
+      - RABBIT_URL=amqp://guest:guest@rabbitmq/
+      - DATABASE_URL=sqlite+aiosqlite:///./data/db.sqlite3
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./data:/app/data
